@@ -1,0 +1,115 @@
+{% extends "content_recorder/base.html" %}
+
+{% block title %}Generate Script: {{ idea.idea_name }}{% endblock %}
+
+{% block content %}
+<section class="script-control-area">
+    <h2 style="margin-bottom: 30px;">Generate Script Breakdown</h2>
+
+    <div class="idea-summary" style="padding: 15px; background: #fff; border-radius: 8px; border: 1px solid #d2d2d7; margin-bottom: 25px;">
+        <h3 style="margin-top: 0; font-size: 1.2rem;">Idea: {{ idea.idea_name }} (ID: {{ idea.pk }})</h3>
+        <p style="font-size: 0.9rem; max-height: 150px; overflow-y: auto;">
+            **Raw Content Snippet:** {{ idea.raw_content|truncatechars:300 }}
+        </p>
+    </div>
+
+    <form method="post" action="{% url 'content_recorder:generate_script_action' pk=idea.pk %}" class="control-form">
+        {% csrf_token %}
+
+        <div class="form-group">
+            <label for="id_target_platform">Target Platform <span style="color: red;">*</span></label>
+            <select name="target_platform" id="id_target_platform" required>
+                <option value="" disabled selected>Select a target platform</option>
+                <option value="YouTube Long-Form">YouTube (Long-Form)</option>
+                <option value="TikTok/Reels">TikTok/Reels (Short-Form)</option>
+                <option value="LinkedIn Post">LinkedIn (Text/Short Video)</option>
+                <option value="Podcast Segment">Podcast Segment</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label for="id_llm_prompt_version">LLM Prompt Template <span style="color: red;">*</span></label>
+            <select name="llm_prompt_version" id="id_llm_prompt_version" required>
+                <option value="" disabled selected>Select generation strategy</option>
+                <option value="V1_Analytical">V1: Analytical Blueprint (Focus on logical structure)</option>
+                <option value="V2_Pacing">V2: Pacing and Retention (Focus on efficiency and word count)</option>
+                <option value="V3_Narrative">V3: Narrative and Hook (Focus on story arc and CTA)</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="id_global_mood">Global Mood/Tone <span style="color: red;">*</span></label>
+            <select name="global_mood" id="id_global_mood" required>
+                <option value="" disabled selected>Select the desired tone</option>
+                <option value="Highly Motivational">Highly Motivational</option>
+                <option value="Humorous & Sarcastic">Humorous & Sarcastic</option>
+                <option value="Informative & Serious">Informative & Serious</option>
+                <option value="Neutral & Unbiased">Neutral & Unbiased</option>
+                <option value="Casual & Conversational">Casual & Conversational</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="id_target_audience">Target Audience/Persona (Optional)</label>
+            <input type="text" name="target_audience" id="id_target_audience" placeholder="e.g., Senior developers, stay-at-home parents, new cryptocurrency investors">
+        </div>
+
+        <div class="form-group">
+            <label for="id_max_word_count">Max Total Word Count (Optional)</label>
+            <input type="number" name="max_word_count" id="id_max_word_count" placeholder="e.g., 1500" min="50">
+            <small style="color: #6c757d;">Suggested limit for long-form content. Leave blank for no limit.</small>
+        </div>
+
+        <button type="submit" class="cta-button">
+            ✨ Run Gemini Script Breakdown &rarr;
+        </button>
+
+        <a href="{% url 'content_recorder:detail' pk=idea.pk %}" class="cancel-link">&larr; Cancel</a>
+    </form>
+    
+</section>
+
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ... (Existing styles remain the same) ... */
+    .script-control-area {
+        max-width: 700px; margin: 0 auto;
+    }
+    .control-form {
+        background: #fff; border-radius: 12px; padding: 30px; 
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+    }
+    .form-group {
+        margin-bottom: 25px;
+    }
+    .form-group label {
+        display: block; font-weight: 600; margin-bottom: 8px; color: var(--text-color);
+    }
+    .control-form select, 
+    .control-form input[type="text"],
+    .control-form input[type="number"] { /* Added number input styling */
+        width: 100%; padding: 12px; border: 1px solid var(--border-color);
+        border-radius: 8px; box-sizing: border-box; font-size: 1rem;
+        transition: border-color 0.2s;
+    }
+    .control-form select:focus, 
+    .control-form input[type="text"]:focus,
+    .control-form input[type="number"]:focus {
+        border-color: var(--primary-color); outline: none; box-shadow: 0 0 0 2px rgba(0, 122, 255, 0.2);
+    }
+    .cta-button {
+        background-color: var(--primary-color); color: white; border: none;
+        padding: 12px 25px; border-radius: 8px; font-size: 1rem;
+        font-weight: 600; cursor: pointer; transition: background-color 0.2s;
+        display: inline-block; margin-right: 15px;
+    }
+    .cta-button:hover {
+        background-color: #005bb5;
+    }
+    .cancel-link {
+        color: #6c757d; text-decoration: none; font-size: 0.9rem;
+    }
+</style>
+{% endblock %}

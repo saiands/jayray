@@ -1,0 +1,246 @@
+{% extends "content_recorder/base.html" %}
+
+{% block title %}Idea Detail: {{ idea.idea_name|default:"Untitled Idea" }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Detail-Specific Aura Styling */
+    .detail-container {
+        display: grid;
+        grid-template-columns: 3fr 1fr; /* Main content and Sidebar */
+        gap: 30px;
+    }
+    .detail-main-content {
+        padding-right: 20px;
+    }
+    .detail-sidebar {
+        background: var(--card-bg); border-radius: 12px; 
+        padding: 20px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        align-self: start;
+        position: sticky; top: 80px; /* Make it sticky below the header */
+    }
+    .detail-sidebar h4 {
+        margin-top: 0; padding-bottom: 10px; border-bottom: 1px solid var(--border-color);
+        font-size: 1.1rem; font-weight: 600; color: var(--text-color);
+    }
+    .action-links a {
+        display: block; padding: 8px 0; font-size: 0.95rem; 
+        text-decoration: none; color: var(--primary-color);
+        transition: color 0.2s;
+    }
+    .action-links a:hover { color: #0066cc; }
+    .delete-link { color: #dc3545 !important; }
+
+    /* Content Sections */
+    .content-section {
+        background: var(--card-bg); border-radius: 12px; 
+        padding: 30px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        margin-bottom: 25px;
+    }
+    .content-section h3 {
+        font-size: 1.5rem; font-weight: 600; color: var(--text-color);
+        margin-top: 0; margin-bottom: 20px;
+    }
+    .raw-content-display {
+        white-space: pre-wrap;
+        background-color: #f9f9f9;
+        padding: 15px; border-radius: 8px;
+        border: 1px solid var(--border-color);
+        font-family: Menlo, Monaco, Consolas, "Courier New", monospace;
+        font-size: 0.9rem;
+        color: #3c3c43;
+    }
+    .source-table, .log-table {
+        width: 100%; border-collapse: collapse;
+    }
+    .source-table th, .log-table th, .source-table td, .log-table td {
+        padding: 10px 15px; text-align: left; border-bottom: 1px solid var(--border-color);
+        font-size: 0.9rem;
+    }
+    .source-table th, .log-table th {
+        background-color: #f5f5f7; font-weight: 600; color: var(--sub-text-color);
+    }
+    .primary-image {
+        max-width: 100%; height: auto; border-radius: 8px; 
+        margin-top: 15px; border: 1px solid var(--border-color);
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 900px) {
+        .detail-container {
+            grid-template-columns: 1fr;
+        }
+        .detail-sidebar {
+            position: static; 
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="content-detail-area">
+    <div class="detail-container">
+        
+        <div class="detail-main-content">
+            <h1 style="font-size: 2.5rem; margin-top: 0; margin-bottom: 10px;">{{ idea.idea_name|default:"Untitled Content Idea" }}</h1>
+            
+            <p style="margin-bottom: 30px;">
+                <strong>ID:</strong> {{ idea.content_id }} | 
+                <strong>Created:</strong> {{ idea.created_at|date:"M d, Y h:i A" }} | 
+                <strong>Updated:</strong> {{ idea.updated_at|default:"N/A"|date:"M d, Y h:i A" }}
+            </p>
+
+            <div class="content-section">
+                <h3>Raw Input Content</h3>
+                {% if idea.primary_image %}
+                    <img src="{{ idea.primary_image.url }}" alt="Primary Image" class="primary-image">
+                {% endif %}
+                <pre class="raw-content-display">{{ idea.raw_content }}</pre>
+            </div>
+            
+            <div class="content-section">
+                <h3>Sources & Files</h3>
+                {% if idea.sources.all %}
+                <table class="source-table">
+                    <thead>
+                        <tr>
+                            <th>Type</th>
+                            <th>Data/File</th>
+                            <th>Description</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for source in idea.sources.all %}
+                        <tr>
+                            <td><span class="status-tag status-Draft">{{ source.get_source_type_display }}</span></td>
+                            <td>{{ source.source_data|truncatechars:50 }}</td>
+                            <td>{{ source.description|default:"-" }}</td>
+                            <td>{{ source.created_at|date:"M d, Y" }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <p style="color: var(--sub-text-color);">No recorded sources for this idea.</p>
+                {% endif %}
+            </div>
+
+            <div class="content-section">
+                <h3>Activity Log</h3>
+                {% if idea.logs.all %}
+                <table class="log-table">
+                    <thead>
+                        <tr>
+                            <th>Time</th>
+                            <th>User</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for log in idea.logs.all %}
+                        <tr>
+                            <td>{{ log.timestamp|date:"M d, Y h:i A" }}</td>
+                            <td>{{ log.user.username|default:"System" }}</td>
+                            <td>{{ log.action }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <p style="color: var(--sub-text-color);">No changes recorded yet.</p>
+                {% endif %}
+            </div>
+
+        </div>
+
+        <div class="detail-sidebar">
+            <h4>Workflow Status</h4>
+            <div style="margin-bottom: 20px;">
+                <span class="status-tag status-{{ idea.status }}" style="font-size: 1rem; padding: 6px 12px;">
+                    {{ idea.get_status_display }}
+                </span>
+            </div>
+
+            <h4>Idea Actions</h4>
+            <div class="action-links">
+                <a href="{% url 'content_recorder:edit' pk=idea.pk %}">✏️ Edit Idea Content</a>
+                <a href="#">📝 Generate Script (WIP)</a>
+                <a href="#">🖼️ Create Storyboard (WIP)</a>
+                <a href="{% url 'content_recorder:delete' pk=idea.content_id %}" class="delete-link">🗑️ Delete/Archive Idea</a>
+            </div>
+
+            <div style="margin-bottom: 25px;">
+                <a href="{% url 'content_recorder:edit' pk=idea.pk %}">Edit Idea</a>
+                
+                <a href="{% url 'content_recorder:script_controls' pk=idea.pk %}" 
+                   style="text-decoration: none; padding: 8px 15px; background-color: #38b438; color: white; border-radius: 4px; display: inline-block; margin-left: 10px;">
+                    ✨ Generate Script
+                </a>
+            
+                <a href="{% url 'content_recorder:delete' pk=idea.content_id %}" 
+                   style="text-decoration: none; padding: 8px 15px; background-color: #dc3545; color: white; border-radius: 4px; display: inline-block; margin-left: 10px;">
+                    Trash
+                </a>
+            </div>
+
+            
+
+            <div style="margin-top: 30px; border-top: 1px solid var(--border-color); padding-top: 15px;">
+                <a href="{% url 'content_recorder:list' %}" style="color: var(--sub-text-color); text-decoration: none;">&larr; Back to Library</a>
+            </div>
+        </div>
+    </div>
+</section>
+
+{% if breakdown %}
+<hr style="margin-top: 40px; margin-bottom: 40px;">
+
+<section class="script-breakdown-display">
+    <h3 style="color: #38b438;">✨ Script Breakdown (Generated)</h3>
+    
+    {% if breakdown.breakdown_data and breakdown.breakdown_data.script_breakdown and breakdown.breakdown_data.script_breakdown.scenes %}
+
+        <div style="background: #e9ffea; padding: 10px; border-radius: 6px; margin-bottom: 20px;">
+            <p style="font-size: 0.9rem; margin: 0;">
+                **Platform:** {{ breakdown.target_platform }} | 
+                **Mood:** {{ breakdown.global_mood }} | 
+                **Strategy:** {{ breakdown.prompt_used }} |
+                **Generated On:** {{ breakdown.created_at|date:"M j, Y H:i" }}
+            </p>
+        </div>
+
+        {% for scene in breakdown.breakdown_data.script_breakdown.scenes %}
+            <div class="scene-card" style="border: 1px solid #d2d2d7; padding: 15px; margin-bottom: 15px; border-radius: 8px; background: #fff;">
+                
+                <h4 style="margin-top: 0; display: inline-block;">
+                    <span style="color: #007aff;">Scene {{ scene.scene_id }}:</span> {{ scene.heading }}
+                </h4>
+                
+                <span style="float: right; font-weight: 600; color: #6c757d;">
+                    ~{{ scene.word_count }} words
+                </span>
+
+                <p style="font-style: italic; font-size: 0.95rem;">
+                    **Description:** {{ scene.description }}
+                </p>
+                
+                <p style="font-size: 0.9rem; margin-bottom: 0;">
+                    **Visuals:** {{ scene.visual_suggestions }}
+                </p>
+            </div>
+        {% endfor %}
+
+    {% else %}
+        <p style="margin-top: 20px; color: #dc3545; font-weight: bold;">
+            ⚠️ Breakdown data is empty or structured incorrectly. The LLM may have failed to return valid JSON.
+        </p>
+    {% endif %}
+
+</section>
+{% else %}
+<p style="margin-top: 20px; color: #808080;">
+    No script breakdown found. Click 'Generate Script' to create one.
+</p>
+{% endif %}
+{% endblock %}

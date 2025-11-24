@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jayray | {% block title %}{% endblock %}</title>
+    
+    <style>
+        :root {
+            --primary-color: #007aff; /* Apple Blue */
+            --secondary-color: #5ac8fa;
+            --background-color: #f5f5f7; /* Near-white background */
+            --header-bg: rgba(255, 255, 255, 0.9); /* Translucent white */
+            --text-color: #1d1d1f; /* Near-black text */
+            --sub-text-color: #6d6d71;
+            --border-color: #e5e5ea;
+            --card-bg: #ffffff;
+            --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+        }
+        body {
+            margin: 0; padding-top: 64px; font-family: var(--font-family); 
+            background-color: var(--background-color); color: var(--text-color);
+            line-height: 1.6;
+        }
+        /* Header & Navigation (Fixed, Translucent) */
+        #main-header {
+            position: fixed; top: 0; left: 0; right: 0; height: 55px; 
+            background-color: var(--header-bg); backdrop-filter: saturate(180%) blur(10px);
+            border-bottom: 1px solid var(--border-color); z-index: 1000;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .nav-menu {
+            width: 100%; max-width: 1100px; padding: 0 20px;
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .brand-name {
+            font-size: 1.3rem; font-weight: 700; color: var(--text-color); text-decoration: none;
+            display: flex; align-items: center;
+        }
+        .brand-name::before {
+            content: "💡";
+            margin-right: 8px;
+        }
+        .app-links a {
+            margin-left: 25px; color: var(--sub-text-color); text-decoration: none; 
+            font-size: 0.9rem; transition: color 0.2s, font-weight 0.2s;
+            padding: 5px 0;
+        }
+        .app-links a:hover, .app-links a.active {
+            color: var(--primary-color); font-weight: 500;
+        }
+
+        /* Main Content Wrapper */
+        .content {
+            max-width: 1000px; margin: 40px auto 80px auto; padding: 0 20px;
+        }
+
+        /* Utility Classes (Buttons, Status) */
+        .cta-button {
+            display: inline-block; padding: 10px 20px; border-radius: 8px; 
+            font-size: 1rem; font-weight: 600; text-decoration: none; cursor: pointer;
+            transition: all 0.2s ease; border: none;
+            background-color: var(--primary-color); color: white;
+            box-shadow: 0 4px 12px rgba(0, 122, 255, 0.2);
+        }
+        .cta-button:hover {
+            background-color: #0066cc;
+            box-shadow: 0 6px 15px rgba(0, 122, 255, 0.3);
+        }
+        .status-tag {
+            padding: 4px 10px; border-radius: 6px; font-size: 0.85rem; font-weight: 600;
+            display: inline-block;
+        }
+        /* Status Colors - Use your Django choices logic */
+        .status-Draft { background-color: #e5e5ea; color: #3c3c43; }
+        .status-Script { background-color: #e6ffed; color: #009944; }
+        .status-Published { background-color: #e0f2ff; color: #007aff; }
+        .status-Duplicate { background-color: #ffe5e5; color: #cc0000; }
+        .status-Production { background-color: #fff8e0; color: #cc8800; }
+
+        /* General Forms Styling */
+        .form-card {
+            background: var(--card-bg); border-radius: 12px; padding: 40px; 
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+            margin-top: 30px;
+        }
+        .form-card input[type="text"], 
+        .form-card textarea, 
+        .form-card select {
+            width: 100%; padding: 12px; margin-bottom: 20px; border: 1px solid var(--border-color);
+            border-radius: 8px; box-sizing: border-box; font-size: 1rem;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            font-family: var(--font-family);
+        }
+        .form-card input:focus, .form-card textarea:focus, .form-card select:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.15);
+            outline: none;
+        }
+        .field-group label {
+            display: block; font-weight: 600; margin-bottom: 5px; font-size: 0.95rem;
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <header id="main-header">
+        <nav class="nav-menu">
+            <a href="{% url 'content_recorder:list' %}" class="brand-name">Jayray</a>
+            <div class="app-links">
+                <a href="{% url 'content_recorder:list' %}" class="{% if request.resolver_match.url_name == 'list' %}active{% endif %}">Ideas</a>
+                <a href="{% url 'content_recorder:record' %}" class="{% if request.resolver_match.url_name == 'record' %}active{% endif %}">New Idea</a>
+                <a href="#">Script Writer</a>
+                <a href="#">Image Generator</a>
+            </div>
+        </nav>
+    </header>
+
+    <div class="content">
+        {% block content %}{% endblock %}
+    </div>
+</body>
+</html>

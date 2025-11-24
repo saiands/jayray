@@ -1,0 +1,121 @@
+{% extends "content_recorder/base.html" %}
+
+{% block title %}
+    {% if form.instance.pk %}Edit Idea: {{ form.instance.idea_name|default:"Untitled" }}{% else %}Record New Content{% endif %}
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Form-Specific Aura Styling */
+    .content-submission-area h2 {
+        font-size: 2rem; font-weight: 700; margin-bottom: 30px; text-align: center;
+    }
+    .upload-form .field-group {
+        margin-bottom: 25px;
+    }
+    /* Custom File Input Styling */
+    .file-upload-wrapper {
+        display: flex; align-items: center; border: 1px solid var(--border-color);
+        border-radius: 8px; overflow: hidden; background-color: #fafafa;
+        margin-bottom: 20px;
+    }
+    .file-upload-button {
+        background-color: var(--border-color); color: var(--text-color);
+        padding: 12px 15px; cursor: pointer; border-right: 1px solid var(--border-color);
+        font-weight: 500; font-size: 0.95rem;
+        transition: background-color 0.2s;
+        white-space: nowrap;
+    }
+    .file-upload-button:hover { background-color: #d2d2d7; }
+    .file-name-display {
+        padding: 0 15px; color: var(--sub-text-color); font-size: 0.9rem;
+        overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .hidden-input { display: none; }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="content-submission-area">
+    <h2>
+        {% if form.instance.pk %}Edit Idea: {{ form.instance.idea_name|default:"Untitled" }}{% else %}Record New Idea{% endif %}
+    </h2>
+
+    <form method="post" enctype="multipart/form-data" class="form-card upload-form">
+        {% csrf_token %}
+
+        <div class="field-group">
+            <label for="{{ form.idea_name.id_for_label }}">Idea Title (Optional)</label>
+            {{ form.idea_name }}
+        </div>
+        
+        <div class="field-group">
+            <label for="{{ form.raw_content.id_for_label }}">Raw Input Content (Text/Paste)</label>
+            {{ form.raw_content }}
+        </div>
+        
+        <div style="display: flex; gap: 30px; margin-bottom: 25px;">
+            <div class="field-group" style="flex: 1;">
+                <label for="{{ form.status.id_for_label }}">Workflow Status</label>
+                {{ form.status }}
+            </div>
+            
+            <div class="field-group" style="flex: 1;">
+                <label for="file-upload">Primary Image/File</label>
+                {% if form.instance.primary_image %}
+                    <p style="font-size: 0.85rem; color: #515154; margin-bottom: 5px;">
+                        Current: <a href="{{ form.instance.primary_image.url }}" target="_blank" style="color: var(--primary-color);">View Image</a>
+                    </p>
+                {% endif %}
+                
+                <div class="file-upload-wrapper">
+                    <label for="file-upload" class="file-upload-button">Choose File</label>
+                    <input type="file" name="{{ form.primary_image.name }}" id="file-upload" class="hidden-input" accept="image/*, .doc, .docx, .pdf, .txt">
+                    <span id="file-name-display" class="file-name-display">
+                        {% if form.instance.primary_image %}
+                            Image uploaded. Ready to replace.
+                        {% else %}
+                            No file selected.
+                        {% endif %}
+                    </span>
+                </div>
+            </div>
+        </div>
+        
+        {% if form.errors %}
+            <div style="color: #cc0000; margin-bottom: 15px; padding: 10px; border: 1px solid #ffe5e5; border-radius: 8px;">
+                <strong>Please correct the errors below:</strong>
+                {{ form.errors }}
+            </div>
+        {% endif %}
+        
+        <div style="text-align: center; margin-top: 20px;">
+            <button type="submit" class="cta-button">
+                {% if form.instance.pk %}Save Changes{% else %}Process & Save Idea{% endif %}
+            </button>
+            
+            {% if form.instance.pk %}
+                <a href="{% url 'content_recorder:detail' pk=form.instance.pk %}" style="margin-left: 20px; color: var(--sub-text-color); text-decoration: none; font-weight: 500;">
+                    &larr; Cancel Edit
+                </a>
+            {% endif %}
+        </div>
+    </form>
+</section>
+
+<script>
+    // Script to handle the custom file upload display
+    const fileInput = document.getElementById('file-upload');
+    const fileNameDisplay = document.getElementById('file-name-display');
+
+    if (fileInput) {
+        fileInput.addEventListener('change', function() {
+            if (this.files.length > 0) {
+                fileNameDisplay.textContent = this.files[0].name;
+            } else {
+                fileNameDisplay.textContent = 'No file selected.';
+            }
+        });
+    }
+</script>
+{% endblock %}

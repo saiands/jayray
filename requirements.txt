@@ -1,0 +1,13 @@
+# Django Framework
+Django~=4.2
+
+# File Parsing Dependencies for Content Recorder App
+python-docx
+pypdf
+Pillow
+
+# Future Dependencies (e.g., for Script Writer or APIs)
+# djangorestframework
+# requests
+# python-dotenv
+# celery

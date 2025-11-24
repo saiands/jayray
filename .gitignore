@@ -1,0 +1,12 @@
+# Python Environment Files
+*.pyc
+__pycache__/
+# Your virtual environment folder
+airshift_env/
+
+# Django Files
+db.sqlite3
+/media
+
+# OS/IDE Files
+.DS_Store

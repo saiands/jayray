@@ -1,0 +1,62 @@
+{% extends "content_recorder/base.html" %}
+
+{% block title %}Confirm Deletion: {{ idea.idea_name|default:"Untitled Idea" }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .delete-confirm-card {
+        max-width: 550px; margin: 80px auto; 
+        background: var(--card-bg); border-radius: 12px; 
+        padding: 40px; text-align: center;
+        box-shadow: 0 8px 30px rgba(220, 53, 69, 0.15); /* Red shadow highlight */
+        border: 2px solid #dc3545; /* Red border */
+    }
+    .delete-confirm-card h2 {
+        color: #dc3545; /* Danger Red */
+        font-size: 2rem; font-weight: 700; margin-bottom: 15px;
+    }
+    .delete-confirm-card p {
+        font-size: 1.1rem; color: var(--text-color); margin-bottom: 25px;
+    }
+    .delete-button {
+        background-color: #dc3545; /* Danger Red */
+        color: white; padding: 12px 25px; border-radius: 8px; 
+        border: none; cursor: pointer; margin-right: 15px;
+        font-weight: 600;
+        transition: background-color 0.2s;
+    }
+    .delete-button:hover {
+        background-color: #c82333;
+    }
+    .cancel-link {
+        color: var(--sub-text-color); text-decoration: none; padding: 12px 25px;
+        font-weight: 500;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="delete-confirm-card">
+    
+    <h2>⚠️ Confirm Deletion</h2>
+
+    <p>
+        Are you sure you want to permanently delete the idea: 
+        <br>
+        <strong>"{{ idea.idea_name|default:"Untitled Idea" }}" (ID: {{ idea.content_id }})</strong>?
+    </p>
+
+    <p style="font-weight: 600; color: #cc0000;">This action **cannot be undone**.</p>
+
+    <form method="post" style="margin-top: 30px;">
+        {% csrf_token %}
+        <button type="submit" class="delete-button">
+            Yes, Delete Idea Permanently
+        </button>
+        <a href="{% url 'content_recorder:detail' pk=idea.content_id %}" class="cancel-link">
+            Cancel
+        </a>
+    </form>
+    
+</div>
+{% endblock %}
