@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'video_creator',
     'platform_media_convertor',
     'django.contrib.staticfiles',
+    'prompt_house',
 ]
 
 MIDDLEWARE = [
