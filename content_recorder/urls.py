@@ -36,4 +36,6 @@ urlpatterns = [
     # ... existing URLs
     path('idea/<int:pk>/scene/<int:scene_index>/generate/', views.ImageGenerationView.as_view(), name='generate_image'),
     path('image/<int:image_pk>/delete/', views.ImageSoftDeleteView.as_view(), name='soft_delete_image'),
+
+    path('idea/<int:pk>/scene/<int:scene_index>/edit/', views.SceneEditView.as_view(), name='edit_scene'),
 ]
