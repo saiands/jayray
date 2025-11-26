@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
 from pathlib import Path
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -132,3 +133,12 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # --- Ollama Configuration ---
 OLLAMA_HOST = 'http://localhost:11434'  # Default Ollama host
 OLLAMA_MODEL_NAME = 'llama3:8b'         # The specific model you downloaded
+
+# The absolute path to the directory that holds media files.
+MEDIA_ROOT = BASE_DIR / "media" 
+
+# URL that handles the media served from MEDIA_ROOT.
+MEDIA_URL = "/media/"
+
+# Define where uploaded/generated media files are stored
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')

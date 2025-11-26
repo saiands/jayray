@@ -1,6 +1,9 @@
 from django.db import models
 from django.conf import settings
 
+from django.contrib.auth.models import User
+from django.core.files.storage import FileSystemStorage # or S3Storage, etc.
+
 # --- Custom Manager for Soft Delete ---
 class ContentIdeaManager(models.Manager):
     """Custom manager to exclude soft-deleted ideas by default."""
@@ -113,3 +116,65 @@ class ScriptBreakdown(models.Model):
 
     def __str__(self):
         return f"Breakdown for {self.idea.idea_name} ({self.prompt_used})"
+    
+    # Define storage location for images (adjust as needed for production)
+fs = FileSystemStorage(location='/var/www/media/storyboard_trash')
+
+class SceneImage(models.Model):
+    """
+    Stores metadata for each generated storyboard image, supporting soft-delete.
+    """
+    # Link to the main idea
+    idea = models.ForeignKey(
+        'ContentIdea', 
+        on_delete=models.CASCADE,
+        related_name='scene_images', 
+        help_text="The core idea this image belongs to."
+    )
+    
+    # Link to the scene data (using ID or index from the JSON breakdown)
+    scene_index = models.IntegerField(help_text="Index or ID of the scene in the ScriptBreakdown.")
+    
+    # Image file storage
+    image_file = models.ImageField(upload_to='storyboards/%Y/%m/', help_text="The generated image file.")
+    
+    # Prompt used for this specific generation
+    full_prompt = models.TextField(help_text="The exact prompt used to generate this image.")
+    
+    # Generation parameters for consistency/reproducibility
+    camera_angle = models.CharField(max_length=100, help_text="e.g., Wide shot, Close up.")
+    style_prompt = models.CharField(max_length=255, help_text="e.g., Film noir aesthetic.")
+    negative_prompt = models.TextField(help_text="The negative prompt used.")
+    
+    # Soft Delete Implementation
+    is_deleted = models.BooleanField(default=False, help_text="Set to True for soft deletion.")
+    
+    # File movement for soft delete
+    trash_file = models.FileField(
+        storage=fs, 
+        upload_to='trash/', 
+        null=True, 
+        blank=True,
+        help_text="Storage location if image is soft-deleted."
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    def __str__(self):
+        return f"Image for Idea {self.idea.pk}, Scene {self.scene_index}"
+
+    def soft_delete(self):
+        """Moves the file to trash and sets the is_deleted flag."""
+        if not self.is_deleted:
+            # 1. Save file to the trash location
+            with self.image_file.open('rb') as f:
+                self.trash_file.save(f"deleted_{self.image_file.name}", f)
+
+            # 2. Delete the original file
+            self.image_file.delete(save=False)
+            
+            # 3. Mark as deleted
+            self.is_deleted = True
+            self.save()
+
+# Note: Remember to run migrations after adding this model!

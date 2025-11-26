@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views import View
 from django.contrib import messages
-from django.urls import reverse_lazy
+from django.urls import reverse_lazy, reverse
 from django.views.generic import ListView, DetailView, UpdateView
 from django.db import transaction 
 from django.conf import settings
@@ -10,8 +10,9 @@ import json
 import os 
 from django.db import IntegrityError # Import IntegrityError for robust saving
 
-from .models import ContentIdea, ContentSource, IdeaLog, ScriptBreakdown
+from .models import ContentIdea, ContentSource, IdeaLog, ScriptBreakdown, SceneImage
 from .forms import ContentIdeaForm 
+from django.http import JsonResponse
 
 # External Libraries for File Parsing
 try:
@@ -424,3 +425,128 @@ class ScriptGenerationActionView(View):
             # Catches IntegrityError, DataError (e.g., data too long), and all other exceptions during save
             messages.error(request, f"Database SAVE FAILED for breakdown: {type(e).__name__}: {e}. Check model field sizes vs LLM output.")
             return redirect('content_recorder:detail', pk=pk)
+        
+
+
+# --- MOCK LLM API UTILITY (REPLACE WITH REAL OLLAMA CALL) ---
+# NOTE: In a real app, you would replace this with a real call to SDXL via an API.
+def generate_storyboard_image_mock(scene_desc, camera_angle, style_prompt, negative_prompt):
+    """
+    MOCK function to simulate image generation and return a dummy file path.
+    In a real application, this would call your SDXL API (e.g., stability.ai or a local endpoint)
+    and save the resulting image bytes to a real file path.
+    """
+    # 1. Build the final prompt
+    full_prompt = f"{scene_desc}, {camera_angle}, {style_prompt}, masterpiece, cinematic."
+    
+    # 2. Mock API Call (Simulate time taken)
+    # response = requests.post(settings.SDXL_API_URL, data=...) 
+    
+    # 3. Simulate saving the generated image file (Must return a usable path)
+    # In a real scenario, this would save actual image data.
+    mock_file_path = f"storyboards/2025/11/scene_{scene_desc[:10]}_{hash(full_prompt)}.png"
+
+    return {
+        'success': True,
+        'image_path': mock_file_path,
+        'full_prompt': full_prompt
+    }
+
+# --- VIEW FOR IMAGE GENERATION ---
+
+class ImageGenerationView(View):
+    """Handles generating a new image for a specific scene."""
+    
+    def post(self, request, pk, scene_index):
+        idea = get_object_or_404(ContentIdea, pk=pk)
+        
+        # 1. Get generation parameters from the POST request (dropdowns)
+        camera_angle = request.POST.get('camera_angle')
+        style_prompt = request.POST.get('style_prompt')
+        negative_prompt = request.POST.get('negative_prompt')
+        
+        # 2. Get the scene description from the ScriptBreakdown JSON
+        # NOTE: This assumes your breakdown is in idea.breakdown.breakdown_data['script_breakdown']['scenes']
+        try:
+            scene_data = idea.breakdown.breakdown_data['script_breakdown']['scenes'][scene_index]
+            scene_desc = scene_data.get('description', 'Scene description not available.')
+        except (AttributeError, KeyError, IndexError):
+            messages.error(request, "Error: Script breakdown data not found or invalid scene index.")
+            return redirect(reverse('content_recorder:detail', args=[pk]))
+            
+        # 3. Call the Mock/Real Image Generation function
+        generation_result = generate_storyboard_image_mock(
+            scene_desc, 
+            camera_angle, 
+            style_prompt, 
+            negative_prompt
+        )
+
+        if generation_result['success']:
+            # 4. Save the metadata and file path to SceneImage model
+            SceneImage.objects.create(
+                idea=idea,
+                scene_index=scene_index,
+                image_file=generation_result['image_path'], # Replace with File object if using real API
+                full_prompt=generation_result['full_prompt'],
+                camera_angle=camera_angle,
+                style_prompt=style_prompt,
+                negative_prompt=negative_prompt
+            )
+            messages.success(request, f"Image generated successfully for Scene #{scene_index + 1}!")
+        else:
+            messages.error(request, "Image generation failed via API.")
+
+        return redirect(reverse('content_recorder:detail', args=[pk]))
+
+# --- VIEW FOR SOFT DELETION ---
+
+class ImageSoftDeleteView(View):
+    """Handles soft deleting a specific image and moving the file to trash."""
+    
+    def post(self, request, image_pk):
+        image = get_object_or_404(SceneImage, pk=image_pk)
+        idea_pk = image.idea.pk
+        
+        try:
+            image.soft_delete()
+            messages.info(request, "Image moved to trash (soft-deleted).")
+        except Exception as e:
+            messages.error(request, f"Failed to soft delete image: {e}")
+
+        return redirect(reverse('content_recorder:detail', args=[idea_pk]))
+    
+class SceneEditView(View):
+    """
+    Handles updating the description of a specific scene within the 
+    ScriptBreakdown's JSON data.
+    """
+    def post(self, request, pk, scene_index):
+        idea = get_object_or_404(ContentIdea, pk=pk)
+        new_description = request.POST.get('new_description', '').strip()
+        
+        if not new_description:
+            messages.error(request, "Scene description cannot be empty.")
+            return redirect(reverse('content_recorder:detail', args=[pk]))
+            
+        try:
+            breakdown = idea.breakdown # Assumes one-to-one relationship
+            scenes = breakdown.breakdown_data['script_breakdown']['scenes']
+            
+            # Check if index is valid
+            if 0 <= scene_index < len(scenes):
+                # Update the scene description
+                scenes[scene_index]['description'] = new_description
+                
+                # Save the entire JSON structure back to the database
+                breakdown.save() 
+                messages.success(request, f"Scene #{scene_index + 1} description updated successfully!")
+            else:
+                messages.error(request, "Invalid scene index provided.")
+
+        except Exception as e:
+            messages.error(request, f"Failed to edit scene: {e}")
+            
+        # Redirect back to the scene management page
+        return redirect(reverse('content_recorder:detail', args=[pk])) 
+        # NOTE: If you rename your detail URL, update this reverse call!

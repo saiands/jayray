@@ -1,6 +1,7 @@
 # content_recorder/urls.py
 
 from django.urls import path
+from . import views
 from .views import ( 
     ContentListView, 
     ContentRecordView, 
@@ -31,4 +32,8 @@ urlpatterns = [
     # 2. ADD THE TWO NEW PATHS (The names here fix the 'NoReverseMatch' error)
     path('detail/<int:pk>/script/controls/', ScriptControlsView.as_view(), name='script_controls'),
     path('detail/<int:pk>/script/generate/', ScriptGenerationActionView.as_view(), name='generate_script_action'),
+
+    # ... existing URLs
+    path('idea/<int:pk>/scene/<int:scene_index>/generate/', views.ImageGenerationView.as_view(), name='generate_image'),
+    path('image/<int:image_pk>/delete/', views.ImageSoftDeleteView.as_view(), name='soft_delete_image'),
 ]

@@ -34,3 +34,7 @@ if [ $? -eq 0 ]; then
 else
     echo -e "\n❌ Git push failed. Please resolve merge conflicts or check your connection."
 fi
+
+
+
+# to run the file commnad : ./git_flow.sh  

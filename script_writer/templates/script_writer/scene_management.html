@@ -1,0 +1,90 @@
+{% for scene in idea.breakdown.breakdown_data.**scenes** %}
+    
+    <div class="scene-block" id="scene-{{ forloop.counter0 }}">
+        <h3>Scene #{{ forloop.counter }}:</h3>
+
+        {# ========================================================================= #}
+        {# 1. SCENE DESCRIPTION DISPLAY AND EDIT FORM (New Feature) #}
+        {# NOTE: The 'edit_scene' view needs to be created in views.py and urls.py #}
+        {# The initial description value must be encoded to handle special chars. #}
+        <form method="post" action="{% url 'content_recorder:edit_scene' pk=idea.pk scene_index=forloop.counter0 %}">
+            {% csrf_token %}
+            <textarea 
+                name="new_description" 
+                rows="3" 
+                cols="80" 
+                class="scene-description-editor" 
+                required
+            >{{ scene.description }}</textarea>
+            
+            <button type="submit" class="edit-button">📝 Save Scene Edit</button>
+            <span class="help-text">Edit the text, then click save to update the prompt source.</span>
+        </form>
+        
+        <hr class="separator">
+
+        {# ========================================================================= #}
+        {# 2. GENERATED IMAGES AND SOFT-DELETE #}
+        <div class="generated-images-container">
+            {% with images=idea.scene_images.filter(scene_index=forloop.counter0, is_deleted=False) %}
+                {% if images %}
+                    <h4>🖼️ Generated Images ({{ images.count }}):</h4>
+                    {% for image in images %}
+                        <div class="image-item">
+                            <img src="{{ image.image_file.url }}" alt="Storyboard Image" style="max-width: 300px; border: 1px solid #ddd; margin-bottom: 5px;">
+                            
+                            <form method="post" action="{% url 'content_recorder:soft_delete_image' image_pk=image.pk %}" style="display:block;">
+                                {% csrf_token %}
+                                <button type="submit" class="trash-button">🗑️ Trash Image</button>
+                            </form>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <p>No active images generated for this scene yet.</p>
+                {% endif %}
+            {% endwith %}
+        </div>
+
+        <hr class="separator">
+
+        {# ========================================================================= #}
+        {# 3. IMAGE GENERATION CONTROLS #}
+        <div class="image-generation-controls">
+            <h4>Generate/Regenerate Image:</h4>
+            <form method="post" action="{% url 'content_recorder:generate_image' pk=idea.pk scene_index=forloop.counter0 %}">
+                {% csrf_token %}
+                
+                <div class="control-group">
+                    <label for="camera_angle_{{ forloop.counter0 }}">🎥 Camera Angle:</label>
+                    <select name="camera_angle" id="camera_angle_{{ forloop.counter0 }}" required>
+                        <option value="Wide shot, full body, dramatic low angle.">Wide shot, Dramatic Low Angle</option>
+                        <option value="Close up, intense focus.">Close up, Intense Focus</option>
+                        <option value="Over the shoulder, medium shot.">Over the Shoulder (OTS)</option>
+                        <option value="Extreme close up, detail focus.">Extreme Close Up</option>
+                        <option value="High angle shot, showing scale.">High Angle</option>
+                        <option value="Low angle shot, empowering view.">Low Angle</option>
+                    </select>
+                </div>
+
+                <div class="control-group">
+                    <label for="style_prompt_{{ forloop.counter0 }}">🎨 Style:</label>
+                    <select name="style_prompt" id="style_prompt_{{ forloop.counter0 }}" required>
+                        <option value="Film noir aesthetic, graphic novel style, high contrast, cinematic light.">Film Noir/Graphic Novel</option>
+                        <option value="Digital illustration, bright colors, volumetric lighting.">Bright Digital</option>
+                        <option value="Pencil sketch, simple lines.">Pencil Sketch (Default Storyboard)</option>
+                        <option value="Photorealistic render, high detail, studio lighting.">Photorealistic Render</option>
+                        <option value="Concept art, matte painting.">Concept Art</option>
+                    </select>
+                </div>
+                
+                <input type="hidden" name="negative_prompt" value="ugly, blurry, messy, watermark, text, out of frame, multiple characters.">
+                
+                <button type="submit" class="cta-button-generate">✨ Generate Image</button>
+            </form>
+        </div>
+    </div>
+    
+    <hr style="border-top: 3px double #8c8b8b;"> 
+{% empty %}
+    <p>❌ No script breakdown scenes found to manage.</p>
+{% endfor %}
