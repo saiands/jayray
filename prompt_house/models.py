@@ -140,4 +140,4 @@ class PromptTemplate(models.Model):
             prompt_parts.append("\n## STOP CONDITIONS")
             prompt_parts.append(self.stop_conditions.strip())
 
-        return "\n".join(prompt_parts)
+        return "\n".join(prompt_parts)  

@@ -1,0 +1,47 @@
+That's a fantastic request. Using Ollama from the VS Code terminal (or any terminal) is the standard workflow.
+
+Here is a comprehensive list of the core Ollama commands, specifically referencing the `llama3:8b` model, for your development environment.
+
+***
+
+### 1. Preparation: Install/Check Model
+
+Before running, you must ensure the specific model is downloaded to your local machine.
+
+| Command | Action | Description |
+| :--- | :--- | :--- |
+| `ollama pull llama3:8b` | **Download/Install** | Downloads the `llama3:8b` model weights to your machine. This is the first step if you haven't used this exact model before. |
+| `ollama list` | **Check Installed Models** | Lists all models currently installed on your system. Use this to verify `llama3:8b` is ready. |
+| `ollama run llama3:8b` | **Auto-Check/Pull** | If the model isn't found, this command will automatically attempt to pull it before running, making it a good one-step check. |
+
+### 2. Running and Testing the Model (The Core Workflow)
+
+These commands are executed directly in the VS Code integrated terminal.
+
+| Command | Action | Description | |
+| :--- | :--- | :--- | :--- |
+| `ollama run llama3:8b` | **Start Interactive Chat** | Starts a continuous, interactive session. Type your prompts after the `>>>` prompt appears. Type `/bye` or press `Ctrl + D` to exit the session. |
+| `ollama run llama3:8b "Why is my JavaScript variable undefined?"` | **Single-Shot Prompt** | Executes a single prompt and prints the response, then immediately exits the session. |
+| `ollama run llama3:8b --format json "Generate a list of 5 fantasy novel ideas."` | **Structured Output** | Runs the model and asks it to force the response into a JSON structure, useful for program parsing. |
+| `ollama run llama3:8b --system "You are a witty pirate who answers all questions with a sea shanty."` | **Set System Prompt** | Defines a persona or set of rules for the model *before* you start the interactive session. |
+
+### 3. Management Commands (Server & Delete)
+
+These commands manage the Ollama server and the stored models.
+
+| Command | Action | Description |
+| :--- | :--- | :--- |
+| **Start/Check Server** | |
+| `ollama` | **Check Status** | Running this command (without arguments) checks if the Ollama service is running. If it is, it lists available commands. If it's not running, it will often try to start it or display an error. |
+| **Note:** Ollama runs as a **background service**. You don't typically have a separate `start` or `stop` command from the terminal unless you install it specifically as a system service (which is OS-dependent, e.g., `systemctl` on Linux). On macOS/Windows, starting the application icon usually starts the service. |
+| `ollama serve` | **Start Foreground Server** | Starts the server process in the current terminal window. This is useful for debugging but ties up the window. (Use `Ctrl + C` to stop it.) |
+| **Deleting Models** | |
+| `ollama rm llama3:8b` | **Remove/Delete Model** | Completely removes the downloaded weights for `llama3:8b` from your machine to free up disk space. |
+
+### Summary of the LLM Testing Workflow in VS Code
+
+1.  **Open Terminal:** In VS Code, go to **Terminal** > **New Terminal**.
+2.  **Pull Model:** If new: `ollama pull llama3:8b`
+3.  **Run Test (Interactive):** `ollama run llama3:8b`
+4.  **Ask Question:** `>>> Write a function for a REST API endpoint in Python Flask.`
+5.  **Exit:** Type `/bye` or press `Ctrl + D`.
